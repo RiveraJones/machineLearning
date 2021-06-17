@@ -88,5 +88,7 @@ sub net{
 
 $y = mx->nd->array([0, 2])
 $y_hat = mx->nd->array([[0.1, 0.3, 0.6], [0.3, 0.2, 0.5]])
-$y_hat[[0, 1], y]
- $x = mx->nd->array([1, 2, 4, 8])
+$y_hat([[0, 1], [$y]])
+
+
+ $$y_hat = mx->nd->array([1, 2, 4, 8], [$y])
