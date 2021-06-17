@@ -11,7 +11,7 @@ use PDL::IO::Pic;
 
 my $batch_size = 64;
 my $nz  = 100;
-my $ngf = 64;
+my $ngf = 64;g
 my $ndf = 64;
 my $nepoch = 25;
 my $lr =0.0002;
