@@ -24,3 +24,4 @@ my $train_data = gluon->data->DataLoader(
     gluon->data->vision->MNIST('./data', train=>1, transform => \&transformer),
     batch_size=>$batch_size, shuffle=>1, last_batch=>'discard'
 );
+asd
