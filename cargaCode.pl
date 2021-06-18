@@ -1,5 +1,4 @@
 
-
 use strict;
 use warnings;
 
@@ -18,15 +17,6 @@ use AI::MXNet::NDArray
 
 $batch_size = 256;
 
-my $train_data = gluon->data->DataLoader(
-    gluon->data->vision->FashionMNIST('./data', train=>1, transform => \&transformer),
-    batch_size=>$batch_size, shuffle=>1, last_batch=>'discard'
-);
-
-my $val_data = gluon->data->DataLoader(
-    gluon->data->vision->FashionMNIST('./data', train=>0, transform=> \&transformer),
-    batch_size=>$batch_size, shuffle=>0
-);
 
 #-----------------------------------------------------------------------------------------#
 #3.6.1. Initializing Model Parameters
@@ -86,26 +76,5 @@ sub net{
 #-----------------------------------------------------------------------------------------#
 #3.6.4. Defining the Loss Function
 
-my $y = mx->nd->array([0, 2])
-my $y_hat = mx->nd->array([[0.1, 0.3, 0.6], [0.3, 0.2, 0.5]])
-###########################################################################################################
-$y_hat([[0, 1], [$y]])
-###########################################################################################################
-p $y_hat->slice([[0, 1], [0, 2]])->aspdl
-#no he hallado la forma de poner dentro de ->slice una variable($y). Por lo que he puesto a mano [0,2]=$y, sin usar la variable.
-
-#SOLUCION MEJOR ENCONTRADA. PONER EL VECTOR [0, 1] EN UNA VARIABLE
-my $y = mx->nd->array([0, 2])
-my $y_hat = mx->nd->array([[0.1, 0.3, 0.6], [0.3, 0.2, 0.5]])
-my $x = mx->nd->array([0, 1]) #para ----------- y_hat[[0, 1], y]
-p $y_hat->slice([$x, $y)->aspdl
-
-
-sub cross_entropy{
-  my($y_hat, $y)= @_;
-  $a=mx->nd->_arange($y_hat->len);
-  return -log($y_hat->slice([$a, $y]));
-}
-
-#-------------L       I       B       R       E       I       A       S----------------------------------------------------------------------------#
-#3.6.5. Classification Accuracy
+$y = mx->nd->array([0, 2])
+$y_hat = mx->nd->array([[0.1, 0.3, 0.6], [0.3, 0.2, 0.5]])
