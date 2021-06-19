@@ -114,10 +114,13 @@ sub cross_entropy{
 
 sub accuracy{
   my($y_hat, $y)=@_;
-  if ($y_hat->aspdl->shape->len > 1 && )#sin el dump, el orden de filas y columnas, en shape, cambia. Mucho ojo!
-  {do_if_true}
-  else
-  {do_if_false};
+  if ($y_hat->aspdl->shape->len > 1 && $y_hat->aspdl->shape->slice(0) > 1)#sin el dump, el orden de filas y columnas, en shape, cambia. Mucho ojo!
+  {
+    $y_hat=AI::MXNet::NDArray->argmax($y_hat, { axis => 1 });
+
+  }
+
+  return
 }
 
 
