@@ -12,6 +12,8 @@ use AI::MXNet qw(mx);
 use PDL::IO::Pic;
 use AI::MXNet::Base;
 use AI::MXNet::NDArray
+use Data::Dump qw(dump);
+use Data::Dumper;
 
 #-----------------------------------------------------------------------------------------#
 #3.6. Implementation of Softmax Regression from Scratch
@@ -109,3 +111,32 @@ sub cross_entropy{
 
 #-------------L       I       B       R       E       I       A       S----------------------------------------------------------------------------#
 #3.6.5. Classification Accuracy
+
+sub accuracy{
+  my($y_hat, $y)=@_;
+  if ($y_hat->aspdl->shape->len > 1 && )#sin el dump, el orden de filas y columnas, en shape, cambia. Mucho ojo!
+  {do_if_true}
+  else
+  {do_if_false};
+}
+
+
+my $e= dump $y_hat->shape
+p $e->len
+
+$fpdl=y_hat->shape
+(dump $y_hat->shape)->len
+
+
+
+print Dumper($X->moveaxis(0, 1)->shape)
+
+print Dumper($y_hat->shape)->len
+
+$s=mx->nd->(Dumper($y_hat->shape))
+
+#conflicto de formato shape dentro de len. Necesita un array, empero le doy algo distinto con el dump.
+p dump ($y_hat->shape)->len
+p $y_hat->aspdl->shape->len
+p $y->aspdl->shape;
+#lo que me devuelve shape es un PDL, y para extraer el primer o segundo objeto de [3 2] mecesito que sea un array
