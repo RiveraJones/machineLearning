@@ -109,37 +109,109 @@ sub cross_entropy{
   return -log($y_hat->slice([$a, $y]));
 }
 
+
+sub sgd{#@save
+my($params,$lr,$batch_size)=@_;
+my $params2=$params;
+for ($i=0;$i<$params->size();$i++){
+$params2[$i]=$params2[$i]-$lr*$params2->grad()/$batch_size;
+}
+}
+
+
+my $lr=0.1
+sub updater{
+  my$batch_size = @_;
+  return sgd(\$w, \$b, $lr, $batch_size);
+}
+
+
 #-------------L       I       B       R       E       I       A       S----------------------------------------------------------------------------#
 #3.6.5. Classification Accuracy
+#1 accuracy -------------------------------------------------------------------------------
 
 sub accuracy{
   my($y_hat, $y)=@_;
   if ($y_hat->aspdl->shape->len > 1 && $y_hat->aspdl->shape->slice(0) > 1)#sin el dump, el orden de filas y columnas, en shape, cambia. Mucho ojo!
   {
     $y_hat=AI::MXNet::NDArray->argmax($y_hat, { axis => 1 });
-
   }
+  $cmp = $y_hat->astype($y->dtype) == $y;
+  return $cmp->astype($y->dtype)->sum;
+  #return $cmp->astype($y->dtype)->sum, dtype=>'float';
+  #$l=$cmp->astype($y->dtype)->sum;
+  #$data = $cmp->astype($y->dtype)->sum->astype('float32')/255;
+  #return $data;
+  #PARECE QUE NO ES NECESARIO LO DE FLOAT322222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222
+}
 
-  return
+pdl> p $m=(accuracy($y_hat, $y) / $y->len)->aspdl
+[0.5]
+
+pdl> p $m->dtype
+float32
+
+pdl> $c=($cmp->astype($y->dtype)->sum->aspdl)->float
+
+pdl> p $c->dtype
+float32
+
+
+#2 evaluate_accuracy -------------------------------------------------------------------------------
+
+sub evaluate_accuracy{
+  my($net, $data_iter)=@_;
+  $metric = Accumulator(2);#?????
+  for my $X ($data_iter) {
+   $metric->add(accuracy(net($X), $y), $y->size)
+  }
+  return metric->slice(0) / metric->slice(1)
+}
+
+#Accumulator
+#revision de add y slice
+
+#3 Accumulator -------------------------------------------------------------------------------
+package Accumulator #https://www.perltutorial.org/perl-oop/
+use strict;
+use warnings;
+sub new{
+  my ($self,$n) = @_;
+  $self->{data} = [0, 0] * $n;
+}
+
+sub add{
+   my ($self,*args) = @_;#???args
+   $self->{data} = [$a + $b for ];#????????????????
+}
+
+sub reset{
+   my ($self) = @_;
+   $self->{data} = [0, 0] * $self->{data}->len;
+}
+
+sub __getitem__{
+   my ($self,$idx) = @_;
+   #my $self = shift;
+   return $self->{data}->slice($idx)
 }
 
 
-my $e= dump $y_hat->shape
-p $e->len
+#4 train_epoch_ch3 -------------------------------------------------------------------------------
 
-$fpdl=y_hat->shape
-(dump $y_hat->shape)->len
-
-
-
-print Dumper($X->moveaxis(0, 1)->shape)
-
-print Dumper($y_hat->shape)->len
-
-$s=mx->nd->(Dumper($y_hat->shape))
-
-#conflicto de formato shape dentro de len. Necesita un array, empero le doy algo distinto con el dump.
-p dump ($y_hat->shape)->len
-p $y_hat->aspdl->shape->len
-p $y->aspdl->shape;
-#lo que me devuelve shape es un PDL, y para extraer el primer o segundo objeto de [3 2] mecesito que sea un array
+sub train_epoch_ch3{
+  my($net, $train_data, $loss, $updater);
+  $metric=Accumulator(3)#????
+  if (isinstance($updater, gluon->Trainer)#????
+    {$updater = $updater->step}#????
+  for my $X ($train_iter) {#????
+    autograd->record(sub {#alex's code
+      $y_hat = net($X);#Alex's code
+      $l = $loss->($net->($y_hat, $y);#Alex's code
+    });
+    $l->backward()
+    $updater->$X->aspdl->shape->slice(0);
+    $metric->add($l->sum, accuracy($y_hat, $y), $y->size);#????add
+  }
+  return $metric->slice(0) / $metric->slice(2), $metric->slice(1) / $metric->slice(2);
+}
