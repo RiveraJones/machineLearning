@@ -82,7 +82,12 @@ $X_prob, $X_prob->sum(1)
 
 sub net{
     my($X) = @_;
-    return softmax(mx->nd->dot($X.reshape([-1, $W.shape[0]]), $W) + $b)
+    #$r=$X->aspdl->reshape([-1, 10]);
+    print $r=$X->reshape([-1, 10])->aspdl;
+
+    #return softmax(mx->nd->dot($X->reshape([-1, $W->shape->(0)]), $W) + $b);
+    return $r
+    #return softmax(mx->nd->dot($r, $W) + $b);
 }
 
 #-----------------------------------------------------------------------------------------#
@@ -182,7 +187,8 @@ sub new{
 
 sub add{
    my ($self,*args) = @_;#???args
-   $self->{data} = [$a + $b for ];#????????????????
+   my $a=zip @$self->{data}, $args
+   $self->{data} = [$a + $b for $a, $b (@a)];#https://stackoverflow.com/questions/38345/is-there-an-elegant-zip-to-interleave-two-lists-in-perl-5
 }
 
 sub reset{
@@ -202,7 +208,7 @@ sub __getitem__{
 sub train_epoch_ch3{
   my($net, $train_data, $loss, $updater);
   $metric=Accumulator(3)#????
-  if (isinstance($updater, gluon->Trainer)#????
+  if (isinstance($updater, gluon->Trainer))#????isinstance
     {$updater = $updater->step}#????
   for my $X ($train_iter) {#????
     autograd->record(sub {#alex's code
