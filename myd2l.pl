@@ -18,7 +18,7 @@ use Data::Dumper;
 #-----------------------------------------------------------------------------------------#
 #3.6. Implementation of Softmax Regression from Scratch
 
-$batch_size = 256;
+my $batch_size = 256;
 
 my $train_data = gluon->data->DataLoader(
     gluon->data->vision->FashionMNIST('./data', train=>1, transform => \&transformer),
@@ -33,8 +33,8 @@ my $val_data = gluon->data->DataLoader(
 #-----------------------------------------------------------------------------------------#
 #3.6.1. Initializing Model Parameters
 
-$num_inputs = 784;
-$num_outputs = 10;
+my $num_inputs = 784;
+my $num_outputs = 10;
 
 
 #Draw random samples from a normal (Gaussian) distribution.
@@ -42,11 +42,11 @@ $num_outputs = 10;
 
 #loc Mean (“centre”) of the distribution.
 #scalef Standard deviation (spread or “width”) of the distribution. Must be non-negative.
-$W = nd->random->normal(0, 0.01, shape=>[$num_inputs, $num_outputs])->aspdl
-p $W
+my $W = nd->random->normal(0, 0.01, shape=>[$num_inputs, $num_outputs])->aspdl
+print $W
 
-$b = mx->nd->zeros([$num_outputs])->aspdl
-p $b
+my $b = mx->nd->zeros([$num_outputs])->aspdl
+print $b
 
 #Attach gradient to x
 # • It allocates memory to store its gradient, which has the same shape as x.
@@ -60,21 +60,23 @@ p $b->grad()->aspdl
 
 #-----------------------------------------------------------------------------------------#
 #3.6.2. Defining the Softmax Operation
-$X = mx->nd->array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+my $X = mx->nd->array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
 
-p $X->sum(0, keepdims => 1)->aspdl
-p $X->sum(1, keepdims => 1)->aspdl
+print $X->sum(0, keepdims => 1)->aspdl
+print $X->sum(1, keepdims => 1)->aspdl
 
 sub softmax {
     my($X) = @_;
-    $X_exp = exp($X);
-    $partion = $X_exp->sum(0, keepdims => 1);
+    my $X_exp = exp($X);
+    #my $X_exp = mx->nd->exp($X); por que mx->nd->?
+    my $partion = $X_exp->sum(0, keepdims => 1);
     return $X_exp / $partion;
 }
 
+mx->random->seed(42); #Fix the seed for reproducibility: npx.random.seed(42) ????????????
 $X = nd->random->normal(0, 1, shape=>[2, 5])
-$X_prob = softmax($X)
-$X_prob, $X_prob->sum(1)
+my $X_prob = softmax($X)
+print $X_prob, $X_prob->sum(1)
 
 #-----------------------------------------------------------------------------------------#
 #3.6.3. Defining the Model
@@ -84,22 +86,12 @@ sub net{
     my($X) = @_;
     #$r=$X->aspdl->reshape([-1, 10]);
     print $r=$X->reshape([-1, 10])->aspdl;
-
     #return softmax(mx->nd->dot($X->reshape([-1, $W->shape->(0)]), $W) + $b);
-    return $r
-    #return softmax(mx->nd->dot($r, $W) + $b);
+    return softmax(mx->nd->dot($X->reshape([-1, @{$W->shape}[0]]), $W) + $b);
 }
 
 #-----------------------------------------------------------------------------------------#
 #3.6.4. Defining the Loss Function
-
-my $y = mx->nd->array([0, 2])
-my $y_hat = mx->nd->array([[0.1, 0.3, 0.6], [0.3, 0.2, 0.5]])
-###########################################################################################################
-$y_hat([[0, 1], [$y]])
-###########################################################################################################
-p $y_hat->slice([[0, 1], [0, 2]])->aspdl
-#no he hallado la forma de poner dentro de ->slice una variable($y). Por lo que he puesto a mano [0,2]=$y, sin usar la variable.
 
 #SOLUCION MEJOR ENCONTRADA. PONER EL VECTOR [0, 1] EN UNA VARIABLE
 my $y = mx->nd->array([0, 2])
@@ -114,6 +106,7 @@ sub cross_entropy{
   return -log($y_hat->slice([$a, $y]));
 }
 
+print "cross_entropy=", cross_entropy($y_hat, $y)->aspdl, "\n";#J
 
 sub sgd{#@save
 my($params,$lr,$batch_size)=@_;
@@ -141,14 +134,16 @@ sub accuracy{
   {
     $y_hat=AI::MXNet::NDArray->argmax($y_hat, { axis => 1 });
   }
-  $cmp = $y_hat->astype($y->dtype) == $y;
-  return $cmp->astype($y->dtype)->sum;
+  my $cmp = $y_hat->astype($y->dtype) == $y;
+  return $cmp->astype($y->dtype)->sum->astype('float32')->aspdl->at(0);#J
   #return $cmp->astype($y->dtype)->sum, dtype=>'float';
   #$l=$cmp->astype($y->dtype)->sum;
-  #$data = $cmp->astype($y->dtype)->sum->astype('float32')/255;
+  #$data = $cmp->astype($y->dtype)->sum->asStype('float32')/255;
   #return $data;
   #PARECE QUE NO ES NECESARIO LO DE FLOAT322222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222
 }
+
+print ("accuracy=", accuracy($y_hat, $y) / $y->len, "\n");#J
 
 pdl> p $m=(accuracy($y_hat, $y) / $y->len)->aspdl
 [0.5]
@@ -166,7 +161,8 @@ float32
 
 sub evaluate_accuracy{
   my($net, $data_iter)=@_;
-  $metric = Accumulator(2);#?????
+  #my $metric = Accumulator(2);#?????
+  my $metric = Accumulator->new(2);#J
   for my $X ($data_iter) {
    $metric->add(accuracy(net($X), $y), $y->size)
   }
@@ -207,17 +203,27 @@ sub __getitem__{
 
 sub train_epoch_ch3{
   my($net, $train_data, $loss, $updater);
-  $metric=Accumulator(3)#????
+  #$metric=Accumulator(3)#????
+  my $metric = Accumulator->new(3);#J
   if (isinstance($updater, gluon->Trainer))#????isinstance
     {$updater = $updater->step}#????
-  for my $X ($train_iter) {#????
+  #for my $X ($train_iter) {#????
+  print "Start training\n";#J
+  my $l;
+  while(defined(my $batch = <$train_iter>)){#J
+    my $X = $batch->[0];#J
+    my $y = $batch->[1]->astype('float32');#J
     autograd->record(sub {#alex's code
       $y_hat = net($X);#Alex's code
-      $l = $loss->($net->($y_hat, $y);#Alex's code
+      $l = $loss->($y_hat, $y);#Alex's code
     });
     $l->backward()
-    $updater->$X->aspdl->shape->slice(0);
-    $metric->add($l->sum, accuracy($y_hat, $y), $y->size);#????add
+    #$updater->$X->aspdl->shape->slice(0);
+    $updater->(@{$X->shape}[0]);
+    #$metric->add($l->sum, accuracy($y_hat, $y), $y->size);#????add
+    $metric->add(\@{[ $l->sum->astype('float32')->aspdl->at(0), accuracy($y_hat, $y), $y->size ]});#J
   }
-  return $metric->slice(0) / $metric->slice(2), $metric->slice(1) / $metric->slice(2);
+  print $metric->getitem($_-1), " " for (1 .. 3); print "\n";#J
+  #return $metric->slice(0) / $metric->slice(2), $metric->slice(1) / $metric->slice(2);
+  return ($metric->getitem(0) / $metric->getitem(2), $metric->getitem(1) / $metric->getitem(2));#J
 }
